@@ -11,13 +11,17 @@ class URLFrontier(object):
     """
 
     seed_urls = {
-        "https://en.wikipedia.org/wiki/Special:Random"  # Let's just start at some random place.
+        "https://en.wikipedia.org/wiki/Main_Page",
     }
 
     def __init__(self):
         # The set of visited urls.
         self._visited = set()
         self._visited_lock = Lock()
+
+        # The set of all urls that are either visited or todo.
+        self._all_urls = set()
+        self._all_urls_lock = Lock()
 
         # The queue that contains the urls we have to visit in the future.
         self._urls = Queue()
@@ -27,19 +31,41 @@ class URLFrontier(object):
         # Used for URLFrontier logging.
         self._url_frontier_logger = logging.getLogger('URLFrontier')
 
+        self._wiki_url_filters = [
+            re.compile('/File:'),
+            re.compile('/Portal:'),
+            re.compile('/Help:'),
+            re.compile('/Talk:'),
+            re.compile('/Wikipedia:'),
+            re.compile('/Special:'),
+            re.compile('/Template:'),
+        ]
+
     def add_url(self, url):
         """
         Add a URL to the frontier. If the URL was already visited, it will not be added.
         :param url: The URL to add
         """
-        self._visited_lock.acquire()
 
-        if url not in self._visited:
-            self._visited.add(url)
-            self._urls.put(url)
-            self._url_frontier_logger.debug('New URL added: %s' % url)
+        if self.valid_wiki_url(url):
+            self._all_urls_lock.acquire()
 
-        self._visited_lock.release()
+            if url not in self._all_urls:
+                self._all_urls.add(url)
+                self._urls.put(url)
+                self._url_frontier_logger.debug('New URL added: %s' % url)
+
+            self._all_urls_lock.release()
+
+    def valid_wiki_url(self, url):
+        """
+        Check if the given url is a valid url of an article on wikipedia.
+        """
+        for regex in self._wiki_url_filters:
+            if regex.search(url) is not None:
+                return False
+
+        return True
 
     def get_url(self):
         """
@@ -47,8 +73,12 @@ class URLFrontier(object):
         This method will block for at most 5 seconds if no URL is available. After 5 seconds it will return None.
         :return: A URL (string)
         """
+        print("Visited: %d | Todo: %d" % (len(self._visited), self._urls.qsize()), end="\r")
         try:
             url = self._urls.get(timeout=5)
+            self._visited_lock.acquire()
+            self._visited.add(url)
+            self._visited_lock.release()
             return url
         except Empty as e:
             return None
@@ -145,6 +175,6 @@ class Fetcher(object):
 
 # Make this file callable!
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(filename="processed.log", level=logging.INFO)
     fetcher = Fetcher(10)
     fetcher.start()
