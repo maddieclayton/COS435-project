@@ -104,6 +104,7 @@ class Parser(object):
         # Used to count the number of pages stored. Each page will be stored with this number as its name.
         self._page_counter = 0
         self._overview_file_handle = open('fetched_data/0_overview.txt', 'w')
+        self._first_paragraph_regex = re.compile('<p>(.*?)</p>')
 
     def parse(self, page_content, page_url):
         """
@@ -121,6 +122,22 @@ class Parser(object):
             url = 'https://en.wikipedia.org/' + s[7:-1]
             self._url_frontier.add_url(url)
 
+        # Save only the content of the first paragraph.
+        self._save_first_paragraph(page_content, page_url)
+
+    def _save_first_paragraph(self, page_content, page_url):
+        # Add the line to the overview.
+        self._overview_file_handle.write("%d\t%s\n" % (self._page_counter, page_url))
+
+        # Extract the first paragraph
+        result = self._first_paragraph_regex.search(page_content)
+        if result is not None:
+            with open('fetched_data/%d.html' % self._page_counter, 'w') as f:
+                f.write(result.group(0))
+            self._page_counter += 1
+
+
+    def _save_page_content(self, page_content, page_url):
         # Add the line to the overview.
         self._overview_file_handle.write("%d\t%s" % (self._page_counter, page_url))
         # Write the whole content to a file.
