@@ -101,9 +101,14 @@ class Parser(object):
 
         self._parse_lock = Lock()
 
-    def parse(self, page_content):
+        # Used to count the number of pages stored. Each page will be stored with this number as its name.
+        self._page_counter = 0
+        self._overview_file_handle = open('fetched_data/0_overview.txt', 'w')
+
+    def parse(self, page_content, page_url):
         """
         Parses a page. This method returns immediately as it parses the contents asynchronously.
+        :param page_url: The URL from which this content was fetched.
         :param page_content: The HTML content of the page that needs to be parsed.
         """
 
@@ -115,6 +120,19 @@ class Parser(object):
         for s in li:
             url = 'https://en.wikipedia.org/' + s[7:-1]
             self._url_frontier.add_url(url)
+
+        # Add the line to the overview.
+        self._overview_file_handle.write("%d\t%s" % (self._page_counter, page_url))
+        # Write the whole content to a file.
+        with open('fetched_data/%d.html' % self._page_counter, 'w') as f:
+            f.write(page_content)
+        self._page_counter += 1
+
+    def cleanup(self):
+        """
+        Cleanup everything
+        """
+        self._overview_file_handle.close()
 
 
 class Fetcher(object):
@@ -146,6 +164,14 @@ class Fetcher(object):
         for t in threads:
             t.join()
 
+        self._cleanup()
+
+    def _cleanup(self):
+        """
+        Cleans up all resources it used.
+        """
+        self._parser.cleanup()
+
     @staticmethod
     def _fetch_pages(url_frontier, parser, logger):
         """
@@ -170,7 +196,7 @@ class Fetcher(object):
             # Get that content.
             logger.info("Processing URL: %s" % url)
             response = session.get(url)
-            parser.parse(response.text)
+            parser.parse(response.text, url)
 
 
 # Make this file callable!
