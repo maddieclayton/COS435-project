@@ -74,7 +74,10 @@ class URLFrontier(object):
             self._all_urls_lock.acquire()
             with open('fetched_data/temp_urls.txt', 'a') as f:
                 for i in range(0, self._url_threshold - 100000):
-                    f.write(self._urls.get(False) + "\n")
+                    try:
+                        f.write(self._urls.get(False) + "\n")
+                    except Empty:
+                        pass
             self._all_urls_lock.release()
 
     def valid_wiki_url(self, url):
