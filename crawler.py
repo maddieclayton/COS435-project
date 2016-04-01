@@ -175,6 +175,10 @@ class Parser(object):
         :param page_content: The HTML content of the page that needs to be parsed.
         """
 
+        # Ensure content queue doesn't blow up!
+        if self._content_queue.qsize() > 300:
+            time.sleep(0.1)
+
         # Add to the queue and return immediately
         self._content_queue.put((page_url, page_content))
 
