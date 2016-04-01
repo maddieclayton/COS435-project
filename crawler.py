@@ -42,21 +42,40 @@ class URLFrontier(object):
             re.compile('/Help:'),
             re.compile('/Talk:'),
             re.compile('/Wikipedia:'),
+            re.compile('/Wikipedia_talk:'),
             re.compile('/Special:'),
             re.compile('/Template:'),
             re.compile('/Template_talk:'),
             re.compile('/User:'),
+            re.compile('/User_talk:'),
             re.compile('/Category:'),
         ]
 
         # The maximum number of urls to hold in memory. Must be larger than 100000
         self._url_threshold = 200000
 
+    def _clean_url(self, url):
+        """
+        Clean a URL. Removes anchors.
+        :param url: The url to clean
+        :return: The cleaned url
+        """
+        index = len(url)
+        try:
+            index = url.index('#')
+        except ValueError:
+            pass
+
+        return url[:index]
+
     def add_url(self, url):
         """
         Add a URL to the frontier. If the URL was already visited, it will not be added.
         :param url: The URL to add
         """
+
+        # Cleanup the url first.
+        url = self._clean_url(url)
 
         if self.valid_wiki_url(url):
             self._all_urls_lock.acquire()
@@ -298,7 +317,7 @@ class Fetcher(object):
                 response = session.get(url)
                 network_logger.info("%f", time.time() - start)
 
-                parser.parse(response.text, url)
+                parser.parse(response.text, response.url)
             except ConnectionError:
                 print("Failed to get URL: %s" % url)
 
