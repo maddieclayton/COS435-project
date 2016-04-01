@@ -149,15 +149,24 @@ class Parser(object):
 
         :type url_frontier: URLFrontier
         """
-        self._url_regex = re.compile('href="/wiki/.*?"')
         self._url_frontier = url_frontier
 
-        self._parse_lock = Lock()
 
         # Used to count the number of pages stored. Each page will be stored with this number as its name.
         self._page_counter = 0
-        self._overview_logger = logging.getLogger('overview')
-        self._first_paragraph_regex = re.compile('<p>(.*?)</p>')
+        self._page_counter_lock = Lock()
+
+
+        # The queue that contains (url, content) tuples that need to be processed.
+        self._content_queue = Queue()
+
+        # Start several threads that actually do the work.
+        thread_count = 2
+        self._threads = set()
+        for i in range(0, thread_count):
+            thread = ParserThread(i, self._content_queue, self._url_frontier)
+            thread.start()
+            self._threads.add(thread)
 
     def parse(self, page_content, page_url):
         """
@@ -166,36 +175,58 @@ class Parser(object):
         :param page_content: The HTML content of the page that needs to be parsed.
         """
 
-        # TODO: Parallelize this implementation according to method description.
-        self._parse_lock.acquire()
-        li = self._url_regex.findall(page_content)
-        self._parse_lock.release()
+        # Add to the queue and return immediately
+        self._content_queue.put((page_url, page_content))
 
-        for s in li:
-            url = 'https://en.wikipedia.org/' + s[7:-1]
-            self._url_frontier.add_url(url)
 
-        # Save only the content of the first paragraph.
-        self._save_first_paragraph(page_content, page_url)
+
+class ParserThread(Thread):
+    """
+    Thread that processes (page_url, page_content) tuples.
+    """
+
+    def __init__(self, thread_number, content_queue, url_frontier):
+        super().__init__()
+        self._overview_logger = logging.getLogger('overview')
+
+        # The queue from which the content is fetched.
+        self._content_queue = content_queue
+
+        # URL Frontier to which new urls are added.
+        self._url_frontier = url_frontier
+
+        # Thread number together with page_counter identify a page when it is written to a file.
+        self._thread_number = thread_number
+        self._page_counter = 0
+
+        # Several regexes
+        self._url_regex = re.compile('href="/wiki/.*?"')
+        self._first_paragraph_regex = re.compile('<p>(.*?)</p>')
+
+    def run(self):
+        while True:
+            (page_url, page_content) = self._content_queue.get()
+
+            # Find all the links
+            li = self._url_regex.findall(page_content)
+            for s in li:
+                url = 'https://en.wikipedia.org/' + s[7:-1]
+                self._url_frontier.add_url(url)
+
+            # Save only the content of the first paragraph.
+            self._save_first_paragraph(page_content, page_url)
 
     def _save_first_paragraph(self, page_content, page_url):
+
         # Add the line to the overview.
-        self._overview_logger.info("%d\t%s\n", self._page_counter, page_url)
+        self._overview_logger.info("%d-%d\t%s\n", self._thread_number, self._page_counter, page_url)
 
         # Extract the first paragraph
         result = self._first_paragraph_regex.search(page_content)
         if result is not None:
-            with open('fetched_data/%d.html' % self._page_counter, 'w') as f:
+            with open('fetched_data/%d-%d.html' % (self._thread_number, self._page_counter), 'w') as f:
                 f.write(result.group(0))
             self._page_counter += 1
-
-    def _save_page_content(self, page_content, page_url):
-        # Add the line to the overview.
-        self._overview_logger.info("%d\t%s\n", self._page_counter, page_url)
-        # Write the whole content to a file.
-        with open('fetched_data/%d.html' % self._page_counter, 'w') as f:
-            f.write(page_content)
-        self._page_counter += 1
 
 
 class Fetcher(object):
