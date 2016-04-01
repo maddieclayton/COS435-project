@@ -50,7 +50,7 @@ class URLFrontier(object):
         ]
 
         # The maximum number of urls to hold in memory. Must be larger than 100000
-        self._url_threshold = 300000
+        self._url_threshold = 200000
 
     def add_url(self, url):
         """
@@ -61,8 +61,9 @@ class URLFrontier(object):
         if self.valid_wiki_url(url):
             self._all_urls_lock.acquire()
 
-            # Compute the hash of the url
+            # Compute the hash of the url. We only use the first 15 elements to save some more space.
             url_hash = hashlib.md5(url.encode('UTF-8')).hexdigest()
+            url_hash = url_hash[:15]
 
             if url_hash not in self._all_urls_hashes:
                 self._all_urls_hashes.add(url_hash)
