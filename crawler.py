@@ -97,7 +97,7 @@ class URLFrontier(object):
         This method will block for at most 5 seconds if no URL is available. After 5 seconds it will return None.
         :return: A URL (string)
         """
-        print("Visited: %d | Todo: %d" % (self._visited_count, self._urls.qsize()), end="\r")
+        print("Visited: %d | Todo: %d | Total: %d" % (self._visited_count, self._urls.qsize(), len(self._all_urls_hashes)), end="\r")
         try:
             url = self._urls.get(timeout=5)
             self._visited_lock.acquire()
