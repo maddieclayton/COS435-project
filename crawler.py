@@ -1,5 +1,8 @@
+import datetime
 import logging
 import re
+import time
+
 import requests
 from threading import Lock, Thread
 from queue import Queue, Empty
@@ -20,7 +23,7 @@ class URLFrontier(object):
         self._visited_lock = Lock()
 
         # Log all urls
-        self._unique_url_file_handle = open('fetched_data/0_urls.txt', 'w')
+        self._backqueue_logger = logging.getLogger('backqueue_size')
 
         # The set of all urls that are either visited or todo.
         self._all_urls = set()
@@ -31,11 +34,6 @@ class URLFrontier(object):
         for seed_url in URLFrontier.seed_urls:
             self._urls.put(seed_url)
 
-        # Used for URLFrontier logging.
-        self._url_frontier_logger = logging.getLogger('URLFrontier')
-
-
-
         self._wiki_url_filters = [
             re.compile('/File:'),
             re.compile('/Portal:'),
@@ -45,6 +43,7 @@ class URLFrontier(object):
             re.compile('/Special:'),
             re.compile('/Template:'),
             re.compile('/User:'),
+            re.compile('/Category:'),
         ]
 
     def add_url(self, url):
@@ -59,15 +58,14 @@ class URLFrontier(object):
             if url not in self._all_urls:
                 self._all_urls.add(url)
                 self._urls.put(url)
-                self._url_frontier_logger.debug('New URL added: %s' % url)
-                # Add the line to the overview.
-                self._unique_url_file_handle.write("%s\n" % url)
+
 
             self._all_urls_lock.release()
 
     def valid_wiki_url(self, url):
         """
         Check if the given url is a valid url of an article on wikipedia.
+        :param url: The url that needs to be checked if it is valid.
         """
         for regex in self._wiki_url_filters:
             if regex.search(url) is not None:
@@ -87,6 +85,10 @@ class URLFrontier(object):
             self._visited_lock.acquire()
             self._visited.add(url)
             self._visited_lock.release()
+
+            # Log the size of the back queue (# of visited and total number)
+            self._backqueue_logger.info("%d\t%d", len(self._visited), len(self._all_urls))
+
             return url
         except Empty as e:
             return None
@@ -111,7 +113,7 @@ class Parser(object):
 
         # Used to count the number of pages stored. Each page will be stored with this number as its name.
         self._page_counter = 0
-        self._overview_file_handle = open('fetched_data/0_overview.txt', 'w')
+        self._overview_logger = logging.getLogger('overview')
         self._first_paragraph_regex = re.compile('<p>(.*?)</p>')
 
     def parse(self, page_content, page_url):
@@ -135,7 +137,7 @@ class Parser(object):
 
     def _save_first_paragraph(self, page_content, page_url):
         # Add the line to the overview.
-        self._overview_file_handle.write("%d\t%s\n" % (self._page_counter, page_url))
+        self._overview_logger.info("%d\t%s\n", self._page_counter, page_url)
 
         # Extract the first paragraph
         result = self._first_paragraph_regex.search(page_content)
@@ -144,20 +146,13 @@ class Parser(object):
                 f.write(result.group(0))
             self._page_counter += 1
 
-
     def _save_page_content(self, page_content, page_url):
         # Add the line to the overview.
-        self._overview_file_handle.write("%d\t%s" % (self._page_counter, page_url))
+        self._overview_logger.info("%d\t%s\n", self._page_counter, page_url)
         # Write the whole content to a file.
         with open('fetched_data/%d.html' % self._page_counter, 'w') as f:
             f.write(page_content)
         self._page_counter += 1
-
-    def cleanup(self):
-        """
-        Cleanup everything
-        """
-        self._overview_file_handle.close()
 
 
 class Fetcher(object):
@@ -171,7 +166,8 @@ class Fetcher(object):
         :type thread_count: int The number of threads to use for fetching.
         """
         self._thread_count = thread_count
-        self._logger = logging.getLogger('FetcherLogger')
+        self._logger = logging.getLogger('processed_urls')
+        self._network_logger = logging.getLogger('network_log')
 
         # Create all the objects we need.
         self._url_frontier = URLFrontier()
@@ -181,7 +177,7 @@ class Fetcher(object):
         # Create the threads and start them.
         threads = []
         for i in range(0, self._thread_count):
-            thread = Thread(target=Fetcher._fetch_pages, args=(self._url_frontier, self._parser, self._logger))
+            thread = Thread(target=Fetcher._fetch_pages, args=(self._url_frontier, self._parser, self._logger, self._network_logger))
             thread.start()
             threads.append(thread)
 
@@ -189,16 +185,10 @@ class Fetcher(object):
         for t in threads:
             t.join()
 
-        self._cleanup()
-
-    def _cleanup(self):
-        """
-        Cleans up all resources it used.
-        """
-        self._parser.cleanup()
+        print("Finished Crawling at %s" % datetime.datetime.now())
 
     @staticmethod
-    def _fetch_pages(url_frontier, parser, logger):
+    def _fetch_pages(url_frontier, parser, logger, network_logger):
         """
         Method fetches pages as long as url_frontier returns not visited pages.
         :type parser: Parser
@@ -219,13 +209,40 @@ class Fetcher(object):
                 return
 
             # Get that content.
-            logger.info("Processing URL: %s" % url)
-            response = session.get(url)
-            parser.parse(response.text, url)
+            logger.info(url)
+
+            # Try to get the content of that url and parse it.
+            try:
+                start = time.time()
+                response = session.get(url)
+                network_logger.info("%f", time.time() - start)
+
+                parser.parse(response.text, url)
+            except ConnectionError:
+                print("Failed to get URL: %s" % url)
+
+
+def setup_logging():
+    loggers = [
+        ("overview", "overview.log"),  # Number and URL
+        ("processed_urls", "processed_urls.log"),  # All URLs that have been processed so far
+        ("backqueue_size", "backqueue_size.log"),  # Number and URL
+        ("network_log", "network_log.log"),  # Time to fetch pages
+    ]
+
+    for (name, filename) in loggers:
+        l = logging.getLogger(name)
+        l.setLevel(logging.INFO)
+        formatter = logging.Formatter('%(asctime)s : %(message)s')
+        file_handler = logging.FileHandler(filename='fetched_data/' + filename, mode='w')
+        file_handler.setFormatter(formatter)
+        l.addHandler(file_handler)
 
 
 # Make this file callable!
 if __name__ == "__main__":
-    logging.basicConfig(filename="processed.log", level=logging.INFO)
+    setup_logging()
+
+    # Start fetching data!
     fetcher = Fetcher(10)
     fetcher.start()
