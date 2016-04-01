@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import logging
 import re
 import time
@@ -19,14 +20,14 @@ class URLFrontier(object):
 
     def __init__(self):
         # The set of visited urls.
-        self._visited = set()
+        self._visited_count = 0
         self._visited_lock = Lock()
 
         # Log all urls
         self._backqueue_logger = logging.getLogger('backqueue_size')
 
         # The set of all urls that are either visited or todo.
-        self._all_urls = set()
+        self._all_urls_hashes = set()
         self._all_urls_lock = Lock()
 
         # The queue that contains the urls we have to visit in the future.
@@ -55,10 +56,12 @@ class URLFrontier(object):
         if self.valid_wiki_url(url):
             self._all_urls_lock.acquire()
 
-            if url not in self._all_urls:
-                self._all_urls.add(url)
-                self._urls.put(url)
+            # Compute the hash of the url
+            url_hash = hashlib.md5(url.encode('UTF-8')).hexdigest()
 
+            if url_hash not in self._all_urls_hashes:
+                self._all_urls_hashes.add(url_hash)
+                self._urls.put(url)
 
             self._all_urls_lock.release()
 
@@ -79,15 +82,15 @@ class URLFrontier(object):
         This method will block for at most 5 seconds if no URL is available. After 5 seconds it will return None.
         :return: A URL (string)
         """
-        print("Visited: %d | Todo: %d" % (len(self._visited), self._urls.qsize()), end="\r")
+        print("Visited: %d | Todo: %d" % (self._visited_count, self._urls.qsize()), end="\r")
         try:
             url = self._urls.get(timeout=5)
             self._visited_lock.acquire()
-            self._visited.add(url)
+            self._visited_count += 1
             self._visited_lock.release()
 
             # Log the size of the back queue (# of visited and total number)
-            self._backqueue_logger.info("%d\t%d", len(self._visited), len(self._all_urls))
+            self._backqueue_logger.info("%d\t%d", self._visited_count, len(self._all_urls_hashes))
 
             return url
         except Empty as e:
