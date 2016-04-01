@@ -3,6 +3,7 @@ import hashlib
 import logging
 import re
 import time
+import os
 
 import requests
 from threading import Lock, Thread
@@ -47,6 +48,9 @@ class URLFrontier(object):
             re.compile('/Category:'),
         ]
 
+        # The maximum number of urls to hold in memory. Must be larger than 100000
+        self._url_threshold = 300000
+
     def add_url(self, url):
         """
         Add a URL to the frontier. If the URL was already visited, it will not be added.
@@ -63,6 +67,14 @@ class URLFrontier(object):
                 self._all_urls_hashes.add(url_hash)
                 self._urls.put(url)
 
+            self._all_urls_lock.release()
+
+        # Check if we have too many URLs in memory. If yes, write them to a file for later retrieval.
+        if self._urls.qsize() > self._url_threshold:
+            self._all_urls_lock.acquire()
+            with open('fetched_data/temp_urls.txt', 'a') as f:
+                for i in range(0, self._url_threshold - 100000):
+                    f.write(self._urls.get(False) + "\n")
             self._all_urls_lock.release()
 
     def valid_wiki_url(self, url):
@@ -94,7 +106,32 @@ class URLFrontier(object):
 
             return url
         except Empty as e:
-            return None
+            # Maybe we have none left in the queue. Let's load some from disk.
+            self._all_urls_lock.acquire()
+
+            path = 'fetched_data/temp_urls.txt'
+            if not os.path.isfile(path):
+                return None
+
+            # Load from the file
+            with open(path, 'r') as f:
+                i = 0
+                for line in f:
+                    self._urls.put(line)
+
+                    # Read a maximum number of lines
+                    if i >= self._url_threshold - 100000:
+                        break
+
+            # Check if we read the complete file.
+            if i < self._url_threshold - 100000:
+                os.remove(path)
+
+            self._all_urls_lock.release()
+
+            # We should now have something in the queue. And if not, the recursive call will return None after
+            # finding out that the temp_urls file doesn't exist.
+            return self.get_url()
 
 
 class Parser(object):
@@ -227,10 +264,10 @@ class Fetcher(object):
 
 def setup_logging():
     loggers = [
-        ("overview", "overview.log"),  # Number and URL
-        ("processed_urls", "processed_urls.log"),  # All URLs that have been processed so far
-        ("backqueue_size", "backqueue_size.log"),  # Number and URL
-        ("network_log", "network_log.log"),  # Time to fetch pages
+        ("overview", "0_overview.log"),  # Number and URL
+        ("processed_urls", "0_processed_urls.log"),  # All URLs that have been processed so far
+        ("backqueue_size", "0_backqueue_size.log"),  # Number and URL
+        ("network_log", "0_network_log.log"),  # Time to fetch pages
     ]
 
     for (name, filename) in loggers:
