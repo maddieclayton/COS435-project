@@ -19,6 +19,9 @@ class URLFrontier(object):
         self._visited = set()
         self._visited_lock = Lock()
 
+        # Log all urls
+        self._unique_url_file_handle = open('fetched_data/0_urls.txt', 'w')
+
         # The set of all urls that are either visited or todo.
         self._all_urls = set()
         self._all_urls_lock = Lock()
@@ -31,6 +34,8 @@ class URLFrontier(object):
         # Used for URLFrontier logging.
         self._url_frontier_logger = logging.getLogger('URLFrontier')
 
+
+
         self._wiki_url_filters = [
             re.compile('/File:'),
             re.compile('/Portal:'),
@@ -39,6 +44,7 @@ class URLFrontier(object):
             re.compile('/Wikipedia:'),
             re.compile('/Special:'),
             re.compile('/Template:'),
+            re.compile('/User:'),
         ]
 
     def add_url(self, url):
@@ -54,6 +60,8 @@ class URLFrontier(object):
                 self._all_urls.add(url)
                 self._urls.put(url)
                 self._url_frontier_logger.debug('New URL added: %s' % url)
+                # Add the line to the overview.
+                self._unique_url_file_handle.write("%s\n" % url)
 
             self._all_urls_lock.release()
 

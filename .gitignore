@@ -86,4 +86,4 @@ celerybeat-schedule
 # Virtual env
 venv/
 
-fetched_data
+fetched_data_*
