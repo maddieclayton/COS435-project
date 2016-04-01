@@ -44,6 +44,7 @@ class URLFrontier(object):
             re.compile('/Wikipedia:'),
             re.compile('/Special:'),
             re.compile('/Template:'),
+            re.compile('/Template_talk:'),
             re.compile('/User:'),
             re.compile('/Category:'),
         ]
@@ -109,6 +110,7 @@ class URLFrontier(object):
 
             return url
         except Empty as e:
+            # XXX: Need to add lock around temp_urls file. Might result in crasho otherwise if multiple try to read from it!
             # Maybe we have none left in the queue. Let's load some from disk.
             self._all_urls_lock.acquire()
 
