@@ -1,6 +1,6 @@
-import os, re, sys
+import os, re
 from nltk.corpus import stopwords
-import operator
+import csv
 
 rootdir = 'fetched_data_small'
 
@@ -28,22 +28,8 @@ for files in os.listdir(rootdir):
 			else:
 				termDict[word] = [files]
 
+w = csv.writer(open("output.csv", "w"))
+for key, val in termDict.items():
+    w.writerow([key, val])
 #for line in termDict:
 #	print (line, termDict[line])
-
-query = sys.argv[1]
-queryWords = query.split()
-scoreDict = {}
-for word in queryWords:
-	if word in termDict:
-		listDocs = termDict[word]
-	else:
-		listDocs = {}
-	for doc in listDocs:
-		if doc in scoreDict:
-			scoreDict[doc] = scoreDict[doc] + 1/len(listDocs)
-		else:
-			scoreDict[doc] = 1/len(listDocs)
-
-result = max(scoreDict, key=scoreDict.get)
-print (result)
