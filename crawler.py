@@ -128,7 +128,7 @@ class URLFrontier(object):
             # Log the size of the back queue (# of visited and total number)
             self._backqueue_logger.info("%d\t%d", self._visited_count, len(self._all_urls_hashes))
 
-            return url
+            return 'https://en.wikipedia.org/' + url
         except Empty as e:
             # XXX: Need to add lock around temp_urls file. Might result in crasho otherwise if multiple try to read from it!
             # Maybe we have none left in the queue. Let's load some from disk.
@@ -236,7 +236,7 @@ class ParserThread(Thread):
             # Find all the links
             li = self._url_regex.findall(page_content)
             for s in li:
-                url = 'https://en.wikipedia.org/' + s[7:-1]
+                url = s[7:-1]  # url looks like: 'wiki/...'
                 self._url_frontier.add_url(url)
 
             # Save only the content of the first paragraph.
