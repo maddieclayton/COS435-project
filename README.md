@@ -13,3 +13,11 @@ run the following commands inside the project directory:
     
 This will install all the needed packages. Each time you work on the project, just make sure you run `source venv/bin/activate`
 to activate the virtual environment in your terminal session. 
+
+## Development Server
+
+Activate the virtual environment. Run
+
+    python server.py
+    
+Go to `127.0.0.1:5000/random-tweet` in your browser.

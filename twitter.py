@@ -14,6 +14,7 @@ class TwitterAPI(object):
 
     # Tweets in New York
     _tweets_source_url = _api_url + "/1.1/search/tweets.json?geocode=40.7,-74.0,5mi&lang=en"
+    _tweets_markup_url = _api_url + '/1/statuses/oembed.json'
 
     # URLs
     _auth_url = _api_url + "/oauth2/token"
@@ -65,7 +66,15 @@ class TwitterAPI(object):
         request.headers['Authorization'] = 'Bearer %s' % TwitterAPI._app_auth_token
         return request
 
+    @staticmethod
+    def get_tweet_markup(id):
+        url = TwitterAPI._tweets_markup_url + '?id=' + str(id)
+        response = requests.get(url).json()
+        return response['html']
+
 
 if __name__ == '__main__':
     # print("Access Token: %s" % TwitterAPI.get_app_access_token())
-    print("Tweets: %s" % TwitterAPI.get_random_tweet())
+    random_tweet = TwitterAPI.get_random_tweet()
+    tweet_id = random_tweet['id']
+    print(TwitterAPI.get_tweet_markup(tweet_id))
