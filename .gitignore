@@ -86,4 +86,5 @@ celerybeat-schedule
 # Virtual env
 venv/
 
-fetched_data_*
+fetched_data/*
+ratings.db
