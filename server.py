@@ -3,7 +3,7 @@ import hashlib
 import db
 
 from twitter import TwitterAPI
-from flask import Flask, render_template, request, session, abort
+from flask import Flask, render_template, request, session, abort, send_from_directory
 
 app = Flask(__name__)
 app.debug = True
@@ -27,7 +27,12 @@ def random_tweet():
     random_tweet = TwitterAPI.get_random_tweet()
     tweet_id = random_tweet['id']
     markup = TwitterAPI.get_tweet_markup(tweet_id)
-    return render_template('tweet.html', tweet_html=markup)
+    parameters = {
+        'tweet_html': markup,
+        'ratings': [1, 2, 3, 4, 5],
+        'tweet_id': tweet_id,
+    }
+    return render_template('tweet.html', **parameters)
 
 
 @app.route('/rate-tweet/<tweet_id>')
@@ -57,6 +62,10 @@ def rate_tweet(tweet_id):
     # Everything successful.
     return "", 201
 
+
+@app.route('/static/<path:path>')
+def serve_file(path):
+    return send_from_directory('static', path)
 
 if __name__ == '__main__':
     app.run()
