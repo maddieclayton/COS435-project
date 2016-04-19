@@ -73,5 +73,9 @@ def rate_tweet(tweet_id):
 def serve_file(path):
     return send_from_directory('static', path)
 
+@app.route('/admin/get-data/db.sqlite')
+def serve_database():
+    return send_from_directory('.', 'data.db')
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=8080)
