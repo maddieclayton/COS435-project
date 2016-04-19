@@ -15,7 +15,7 @@ def create_db():
 
     # Create it!
     conn = sqlite3.connect(db_file)
-    conn.execute('CREATE TABLE tweets (id INTEGER PRIMARY KEY, tweet_id TEXT, rating INTEGER, user TEXT, topics TEXT, created_at TEXT)')
+    conn.execute('CREATE TABLE tweets (id INTEGER PRIMARY KEY, tweet_id TEXT, rating INTEGER, user TEXT, topics TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP)')
 
 
 def connect():

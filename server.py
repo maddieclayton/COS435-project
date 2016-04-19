@@ -1,3 +1,4 @@
+import json
 import random
 import hashlib
 import db
@@ -26,6 +27,11 @@ def get_user_key():
 def random_tweet():
     random_tweet = TwitterAPI.get_random_tweet()
     tweet_id = random_tweet['id']
+
+    # Store the random tweet
+    with open('tweets/%d.json' % tweet_id, 'w') as f:
+        f.write(json.dumps(random_tweet))
+
     markup = TwitterAPI.get_tweet_markup(tweet_id)
     parameters = {
         'tweet_html': markup,
