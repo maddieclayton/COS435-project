@@ -2,7 +2,7 @@
 import sqlite3
 import os
 
-db_file = 'ratings.db'
+db_file = 'data.db'
 
 
 def create_db():
@@ -15,7 +15,7 @@ def create_db():
 
     # Create it!
     conn = sqlite3.connect(db_file)
-    conn.execute('CREATE TABLE ratings (id INTEGER PRIMARY KEY, tweet_id TEXT, rating INTEGER user TEXT, topics TEXT, created_at TEXT)')
+    conn.execute('CREATE TABLE tweets (id INTEGER PRIMARY KEY, tweet_id TEXT, rating INTEGER, user TEXT, topics TEXT, created_at TEXT)')
 
 
 def connect():

@@ -87,4 +87,4 @@ celerybeat-schedule
 venv/
 
 fetched_data/*
-ratings.db
+data.db

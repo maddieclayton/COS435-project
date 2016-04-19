@@ -16,8 +16,8 @@ def get_user_key():
     """
     if "userkey" not in session:
         # Generate a new user key.
-        userkey = hashlib.md5(str(random.randint(0, 10000)))
-        session['userkey'] = userkey
+        userkey = hashlib.md5(str(random.randint(0, 10000)).encode('UTF-8'))
+        session['userkey'] = userkey.hexdigest()
 
     return session['userkey']
 
@@ -47,7 +47,12 @@ def rate_tweet(tweet_id):
     if rating is None or articles is None:
         abort(400)
 
-    # TODO: Create an entry in the database.
+    # Create an entry in the database.
+    conn = db.connect()
+    data = (tweet_id, rating, userkey, articles)
+    conn.execute('INSERT INTO tweets (tweet_id, rating, user, topics) VALUES (?, ?, ?, ?)', data)
+    conn.commit()
+    conn.close()
 
     # Everything successful.
     return "", 201
