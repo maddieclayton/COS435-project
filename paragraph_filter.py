@@ -2,12 +2,12 @@ import os, re
 from nltk.corpus import stopwords
 import csv
 
-rootdir = 'fetched_data_small'
+rootdir = 'fetched_data'
 
 termDict = {}
 for files in os.listdir(rootdir):
 	if '.html' in files:
-		f = open('fetched_data_small/' + files, 'r')
+		f = open('fetched_data/' + files, 'r')
 		readfile = f.read()
 		p = re.compile('<.*?>')
 		li = p.findall(readfile)
