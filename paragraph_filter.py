@@ -9,7 +9,11 @@ for files in os.listdir(rootdir):
 	if '.html' in files:
 		f = open('fetched_data_small/' + files, 'r')
 		readfile = f.read()
-		p = re.compile('<.*?>|\[[0-9]*?\]|\(|\)|\,|\.')
+		p = re.compile('<.*?>')
+		li = p.findall(readfile)
+		for instance in li:
+			readfile = readfile.replace(instance, '')
+		p = re.compile('\[[0-9]*?\]|/|\.|\(|\)|,|\"|\−|\;|\[|\]|\*|\:|\~')
 		li = p.findall(readfile)
 		for instance in li:
 			readfile = readfile.replace(instance, '')
@@ -27,9 +31,11 @@ for files in os.listdir(rootdir):
 				termDict[word].append(files)
 			else:
 				termDict[word] = [files]
-
-w = csv.writer(open("output.csv", "w"))
+#for key, val in termDict.items():
+#	print (key)
+keys = open("keys", "w")
 for key, val in termDict.items():
-    w.writerow([key, val])
-#for line in termDict:
-#	print (line, termDict[line])
+	w = csv.writer(open("output/"+ key +".csv", "w"))
+	w.writerow(val)
+	keys.write(key+"\n")
+  
