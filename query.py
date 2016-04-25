@@ -1,22 +1,23 @@
 import re, csv, sys
 
-keys = open("keys")
-#for key in keys:
-#	print (key)
+keys1 = open("keys")
+keys = []
+for key in keys1:
+	keys.append(key[:-1])
+
 
 query = sys.argv[1]
 queryWords = query.split()
 scoreDict = {}
 for word in queryWords:
-	if word+"\n" in keys:
+	if word in keys:
 		listDocs = csv.reader(open("output/" + word + ".csv"))
 		listDocs1 = next(listDocs)
 		for doc in listDocs1:
-			print (doc)
 			if doc in scoreDict:
 				scoreDict[doc] = scoreDict[doc] + 1/len(listDocs1)
 			else:
 				scoreDict[doc] = 1/len(listDocs1)
 
-#result = max(scoreDict, key=scoreDict.get)
-#print (result)
+result = max(scoreDict, key=scoreDict.get)
+print (result)
