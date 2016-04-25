@@ -31,11 +31,10 @@ for files in os.listdir(rootdir):
 				termDict[word].append(files)
 			else:
 				termDict[word] = [files]
-#for key, val in termDict.items():
-#	print (key)
 keys = open("keys", "w")
 for key, val in termDict.items():
-	w = csv.writer(open("output/"+ key +".csv", "w"))
-	w.writerow(val)
-	keys.write(key+"\n")
+	if len(key) <= 255:
+		w = csv.writer(open("output/"+ key +".csv", "w"))
+		w.writerow(val)
+		keys.write(key+"\n")
   
