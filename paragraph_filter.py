@@ -4,6 +4,9 @@ import csv
 
 rootdir = 'fetched_data'
 
+if not os.path.isdir('output'):
+    os.makedirs('outpu')
+
 termDict = {}
 for files in os.listdir(rootdir):
 	if '.html' in files:
