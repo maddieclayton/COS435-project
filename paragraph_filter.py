@@ -33,7 +33,7 @@ for files in os.listdir(rootdir):
 				termDict[word] = [files]
 keys = open("keys", "w")
 for key, val in termDict.items():
-	if len(key) <= 255:
+	if len(key.encode('utf-8')) <= 255:
 		w = csv.writer(open("output/"+ key +".csv", "w"))
 		w.writerow(val)
 		keys.write(key+"\n")
