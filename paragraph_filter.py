@@ -37,4 +37,3 @@ for key, val in termDict.items():
 		w = csv.writer(open("output/"+ key +".csv", "w"))
 		w.writerow(val)
 		keys.write(key+"\n")
-  
