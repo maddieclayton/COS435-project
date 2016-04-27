@@ -5,7 +5,7 @@ import csv
 rootdir = 'fetched_data'
 
 if not os.path.isdir('output'):
-    os.makedirs('outpu')
+    os.makedirs('output')
 
 termDict = {}
 for files in os.listdir(rootdir):
