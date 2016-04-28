@@ -5,6 +5,7 @@ import db
 
 from twitter import TwitterAPI
 from flask import Flask, render_template, request, session, abort, send_from_directory
+from query import Query
 
 app = Flask(__name__)
 app.debug = True
@@ -32,12 +33,19 @@ def random_tweet():
     with open('tweets/%d.json' % tweet_id, 'w') as f:
         f.write(json.dumps(random_tweet))
 
+    # Get our additional information
+    query = Query(random_tweet['text'])
+    query.run()
+    article = query.get_result_article()
+
     markup = TwitterAPI.get_tweet_markup(tweet_id)
     parameters = {
+        'article_html': article,
         'tweet_html': markup,
         'ratings': [1, 2, 3, 4, 5],
         'tweet_id': tweet_id,
     }
+    print(parameters)
     return render_template('tweet.html', **parameters)
 
 
