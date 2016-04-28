@@ -90,3 +90,4 @@ fetched_data/*
 data.db
 tweets/*
 output/
+.ropeproject/
