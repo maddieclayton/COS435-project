@@ -49,6 +49,7 @@ def create_index(data_dir):
             keys.write(key+"\n")
 
 
+# If this script is called directly, run the indexer with the given folder.
 if __name__ == '__main__':
     source_dir = sys.argv[1]
     create_index(source_dir)
