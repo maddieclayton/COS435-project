@@ -32,18 +32,26 @@ class Query(object):
                     else:
                         score_dict[doc] = 1/len(list_docs1)
 
-        result = max(score_dict, key=score_dict.get)
-        self._result_filename = result
+        if len(score_dict) > 0:
+            result = max(score_dict, key=score_dict.get)
+            self._result_filename = result
 
     def get_result_article(self):
         """
-        :return: The html of the article that matches the query the best.
+        :return: The html of the article that matches the query the best. If there is no result this will return None
         """
-        data_folder = config.Config.source_data_folder
-        with open(data_folder + '/%s' % self._result_filename, 'r') as f:
-            html = f.read()
+        if self._result_filename is not None:
+            data_folder = config.Config.source_data_folder
+            with open(data_folder + '/%s' % self._result_filename, 'r') as f:
+                html = f.read()
 
-        return html
+            return html
+        else:
+            return None
+
+    def get_result_filename(self):
+        # Returns the filename of the article that was found to be most relevant.
+        return self._result_filename
 
 
 if __name__ == '__main__':

@@ -36,6 +36,8 @@
           <div class="well">
             <h2>Additional Information</h2>
             {{ article_html|safe }}
+
+            <small>Source: Wikipedia</small>
           </div>
           <span id="rating-module">
               <b>Is this information helpful?</b>
@@ -75,7 +77,7 @@
     function rateTweet(rating) {
       tweet_id = {{ tweet_id }};
       // @TODO Fix article placeholder
-      $.ajax('/rate-tweet/'+ tweet_id + '?rating=' + rating + '&articles=1')
+      $.ajax('/rate-tweet/'+ tweet_id + '?rating=' + rating + '&articles={{ article_filename|urlencode }}')
 
       // Hide all rating buttons!
       $('#rating-module').html('<b>Thanks for rating!<b/>')

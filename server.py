@@ -26,27 +26,32 @@ def get_user_key():
 
 @app.route("/random-tweet")
 def random_tweet():
-    random_tweet = TwitterAPI.get_random_tweet()
-    tweet_id = random_tweet['id']
+    tweet = TwitterAPI.get_random_tweet()
+    tweet_id = tweet['id']
 
     # Store the random tweet
     with open('tweets/%d.json' % tweet_id, 'w') as f:
-        f.write(json.dumps(random_tweet))
+        f.write(json.dumps(tweet))
 
     # Get our additional information
-    query = Query(random_tweet['text'])
+    query = Query(tweet['text'])
     query.run()
     article = query.get_result_article()
+    article_file_name = query.get_result_filename()
 
-    markup = TwitterAPI.get_tweet_markup(tweet_id)
-    parameters = {
-        'article_html': article,
-        'tweet_html': markup,
-        'ratings': [1, 2, 3, 4, 5],
-        'tweet_id': tweet_id,
-    }
-    print(parameters)
-    return render_template('tweet.html', **parameters)
+    if article is not None:
+        markup = TwitterAPI.get_tweet_markup(tweet_id)
+        parameters = {
+            'article_html': article,
+            'article_filename': article_file_name,
+            'tweet_html': markup,
+            'ratings': [1, 2, 3, 4, 5],
+            'tweet_id': tweet_id,
+        }
+        return render_template('tweet.html', **parameters)
+    else:
+        # We need to find another tweet
+        return random_tweet()
 
 
 @app.route('/rate-tweet/<tweet_id>')
