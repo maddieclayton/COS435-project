@@ -20,6 +20,7 @@ class Query(object):
             keys.append(key[:-1])
 
         query_words = self._query_string.split()
+        query_words = [word.lower() for word in query_words]
         score_dict = {}
         for word in query_words:
             if word in keys:
