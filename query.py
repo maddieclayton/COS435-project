@@ -1,5 +1,6 @@
 import sys
 import csv
+import config
 
 
 class Query(object):
@@ -37,7 +38,8 @@ class Query(object):
         """
         :return: The html of the article that matches the query the best.
         """
-        with open('fetched_data/%s' % self._result_filename, 'r') as f:
+        data_folder = config.Config.source_data_folder
+        with open(data_folder + '/%s' % self._result_filename, 'r') as f:
             html = f.read()
 
         return html
