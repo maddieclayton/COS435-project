@@ -1,3 +1,5 @@
+import html.parser
+import json
 import os
 import re
 import sys
@@ -19,34 +21,122 @@ def create_index(data_dir):
         if '.html' in file:
             f = open(data_dir + '/' + file, 'r')
             readfile = f.read()
-            p = re.compile('<.*?>')
-            li = p.findall(readfile)
-            for instance in li:
-                readfile = readfile.replace(instance, '')
-            p = re.compile('\[[0-9]*?\]|/|\.|\(|\)|,|\"|\−|\;|\[|\]|\*|\:|\~')
-            li = p.findall(readfile)
-            for instance in li:
-                readfile = readfile.replace(instance, '')
-            words_rep = readfile.split()
-            words_rep = [word.lower() for word in words_rep]
-            words = []
-            for i in words_rep:
-                if i not in words:
-                    words.append(i)
-            stop = stopwords.words('english')
-            for word in words:
-                if word in stop:
-                    continue
-                elif word in term_dict:
-                    term_dict[word].append(file)
-                else:
-                    term_dict[word] = [file]
-    keys = open("keys", "w")
-    for key, val in term_dict.items():
+
+            # Parse the html
+            parser = HTMLParser(filename=file)
+            parser.feed(readfile)
+            terms = parser.get_terms()
+
+            # Merge these new terms with what we saw before.
+            for term, entries in terms.items():
+                if term not in term_dict:
+                    term_dict[term] = []
+
+                term_dict[term] += entries
+
+    keys = []
+    for key, entries in term_dict.items():
+        # Filename needs to be checked. Some Filesystems limit filenames by 255 bytes.
         if len(key.encode('utf-8')) <= 255:
-            w = csv.writer(open("output/" + key + ".csv", "w"))
-            w.writerow(val)
-            keys.write(key+"\n")
+            # Create dictionaries and write them to the file.
+            entry_dics = [e.to_dic() for e in entries]
+            with open("output/" + key + ".json", "w") as f:
+                f.write(json.dumps(entry_dics))
+            keys.append(key)
+
+    # Write the keys to a file.
+    with open("keys", "w") as keys_file:
+        keys_file.write(json.dumps(keys))
+
+
+class DictionaryEntry(object):
+
+    def __init__(self, weight, filename):
+        self.weight = weight
+        self.filename = filename
+
+    def to_dic(self):
+        """
+        Returns a dictionary representation
+        """
+        return {
+            'filename': self.filename,
+            'weight': self.weight,
+        }
+
+    def __str__(self):
+        return '<File: %s weight: %d>' % (self.filename, self.weight)
+
+
+class HTMLParser(html.parser.HTMLParser):
+    """
+    Parses HTML fragments to get counts and weights for terms.
+    """
+
+    def __init__(self, filename):
+        """
+        Initialize a new instance.
+        :param filename: The name of the file from which the content that is later parsed comes.
+        """
+        super().__init__()
+
+        self._filename = filename
+
+        # The current weight.
+        self._current_weight = 1
+
+        # A mapping from tags to weights. When a term is within a tag, then the below given weight will be added to the
+        # current weight.
+        self._weights = {
+            'b': 1,
+            'a': 1,
+        }
+
+        # Stores all terms with its attributes
+        self._terms_dict = {}
+
+    def handle_starttag(self, tag, attrs):
+        additional_weight = self._weights.get(tag, 0)
+        self._current_weight += additional_weight
+
+    def handle_endtag(self, tag):
+        additional_weight = self._weights.get(tag, 0)
+        self._current_weight -= additional_weight
+
+    def handle_data(self, data):
+        cleaned_data = self._clean_data(data)
+
+        # Make the data to words...
+        words = cleaned_data.split()
+        words = [word.lower() for word in words]
+
+        stops = stopwords.words('english')
+        for word in words:
+            if word not in stops:
+
+                # Check if we encountered this word before. If not, create a new entry.
+                if word not in self._terms_dict:
+                    self._terms_dict[word] = []
+
+                # Add a new dic entry for this occurence.
+                dic_entry = DictionaryEntry(weight=self._current_weight, filename=self._filename)
+                self._terms_dict[word].append(dic_entry)
+
+    def get_terms(self):
+        return self._terms_dict
+
+
+
+    def _clean_data(self, data):
+        """
+        Cleans the given data.
+        """
+        p = re.compile('\[[0-9]*?\]|/|\.|\(|\)|,|\"|\−|\;|\[|\]|\*|\:|\~')
+        li = p.findall(data)
+        for instance in li:
+            data = data.replace(instance, '')
+
+        return data
 
 
 # If this script is called directly, run the indexer with the given folder.
