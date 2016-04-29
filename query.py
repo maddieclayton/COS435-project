@@ -1,3 +1,4 @@
+import json
 import sys
 import csv
 import config
@@ -14,24 +15,30 @@ class Query(object):
         Run the actual query.
         Once this method is finished use the get_result_article() method to get the HTML of the resulting article.
         """
-        keys1 = open("keys")
-        keys = []
-        for key in keys1:
-            keys.append(key[:-1])
+        with open("keys", 'r') as k:
+            keys_file_content = k.read()
+
+        keys = json.loads(keys_file_content)
 
         query_words = self._query_string.split()
         query_words = [word.lower() for word in query_words]
         score_dict = {}
         for word in query_words:
             if word in keys:
-                list_docs = csv.reader(open("output/" + word + ".csv"))
-                list_docs1 = next(list_docs)
-                for doc in list_docs1:
-                    if doc in score_dict:
-                        score_dict[doc] += 1 / len(list_docs1)
-                    else:
-                        score_dict[doc] = 1/len(list_docs1)
+                path = "output/" + word + ".json"
+                with open(path, 'r') as f:
+                    dic_file_content = f.read()
+                dic_entries = json.loads(dic_file_content)
 
+                # Very basic approach. Just use the weights as counts.
+                for entry in dic_entries:
+                    doc = entry['filename']
+                    if doc not in score_dict:
+                        score_dict[doc] = 0
+
+                    score_dict[doc] += entry['weight']
+
+        print(score_dict)
         if len(score_dict) > 0:
             result = max(score_dict, key=score_dict.get)
             self._result_filename = result
