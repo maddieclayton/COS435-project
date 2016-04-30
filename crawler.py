@@ -16,11 +16,11 @@ class URLFrontier(object):
     """
 
     seed_urls = {
-        "https://en.wikipedia.org/wiki/New_York",
-        "https://en.wikipedia.org/wiki/Hillary_Clinton",
-        "https://en.wikipedia.org/wiki/Water",
-        "https://en.wikipedia.org/wiki/Main_Page",
-        "https://en.wikipedia.org/wiki/Technology",
+        "wiki/New_York",
+        "wiki/Hillary_Clinton",
+        "wiki/Water",
+        "wiki/Main_Page",
+        "wiki/Technology",
     }
 
     def __init__(self):
