@@ -42,6 +42,7 @@ class URLFrontier(object):
 
         self._wiki_url_filters = [
             re.compile('/File:'),
+            re.compile('/Book:'),
             re.compile('/Portal:'),
             re.compile('/Help:'),
             re.compile('/Talk:'),
@@ -54,6 +55,7 @@ class URLFrontier(object):
             re.compile('/User_talk:'),
             re.compile('/Category:'),
             re.compile('/Lists_of_'),
+            re.compile('/List_of_'),
             re.compile('/Timeline_of_'),
             re.compile('/History_of_'),
             re.compile('/films_of_'),
