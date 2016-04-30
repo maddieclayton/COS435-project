@@ -1,6 +1,6 @@
 import json
 import sys
-import csv
+import math
 import config
 
 
@@ -24,19 +24,32 @@ class Query(object):
         query_words = [word.lower() for word in query_words]
         score_dict = {}
         for word in query_words:
-            if word in keys:
+            if len(word) > 1 and word in keys:
                 path = "output/" + word + ".json"
                 with open(path, 'r') as f:
                     dic_file_content = f.read()
                 dic_entries = json.loads(dic_file_content)
 
-                # Very basic approach. Just use the weights as counts.
+                # Let's calculate the weight for that term. Weight is how important that term is in relation to the
+                # whole collection
+                factor = float(config.Config.collection_size) / float(len(dic_entries))
+                weight = math.log10(factor)
+
+                document_term_scores = {}
+                # Very basic approach. Just use the weights as counts multiplied by query term weight.
                 for entry in dic_entries:
                     doc = entry['filename']
-                    if doc not in score_dict:
-                        score_dict[doc] = 0
+                    if doc not in document_term_scores:
+                        document_term_scores[doc] = 0
 
-                    score_dict[doc] += entry['weight']
+                    document_term_scores[doc] += entry['weight'] * weight
+
+                # Merge with overall score dict.
+                for k in document_term_scores.keys():
+                    if k not in score_dict:
+                        score_dict[k] = 0
+
+                    score_dict[k] += document_term_scores[k]
 
         print(score_dict)
         if len(score_dict) > 0:
