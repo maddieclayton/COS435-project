@@ -16,7 +16,11 @@ class URLFrontier(object):
     """
 
     seed_urls = {
+        "https://en.wikipedia.org/wiki/New_York",
+        "https://en.wikipedia.org/wiki/Hillary_Clinton",
+        "https://en.wikipedia.org/wiki/Water",
         "https://en.wikipedia.org/wiki/Main_Page",
+        "https://en.wikipedia.org/wiki/Technology",
     }
 
     def __init__(self):
@@ -49,6 +53,10 @@ class URLFrontier(object):
             re.compile('/User:'),
             re.compile('/User_talk:'),
             re.compile('/Category:'),
+            re.compile('/Lists_of_'),
+            re.compile('/Timeline_of_'),
+            re.compile('/History_of_'),
+            re.compile('/films_of_'),
         ]
 
         # The maximum number of urls to hold in memory. Must be larger than 100000
