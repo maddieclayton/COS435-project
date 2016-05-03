@@ -183,17 +183,15 @@ class Parser(object):
         """
         self._url_frontier = url_frontier
 
-
         # Used to count the number of pages stored. Each page will be stored with this number as its name.
         self._page_counter = 0
         self._page_counter_lock = Lock()
-
 
         # The queue that contains (url, content) tuples that need to be processed.
         self._content_queue = Queue()
 
         # Start several threads that actually do the work.
-        thread_count = 2
+        thread_count = 3
         self._threads = set()
         for i in range(0, thread_count):
             thread = ParserThread(i, self._content_queue, self._url_frontier)
@@ -260,9 +258,12 @@ class ParserThread(Thread):
         # Extract the first paragraph
         result = self._first_paragraph_regex.search(page_content)
         if result is not None:
-            with open('fetched_data/%d-%d.html' % (self._thread_number, self._page_counter), 'w') as f:
-                f.write(result.group(0))
-            self._page_counter += 1
+            first_paragraph_content = result.group(0)
+            # Make sure we ignore the "may refer to:" pages.
+            if " may refer to:" not in first_paragraph_content.lower():
+                with open('fetched_data/%d-%d.html' % (self._thread_number, self._page_counter), 'w') as f:
+                    f.write(first_paragraph_content)
+                self._page_counter += 1
 
 
 class Fetcher(object):
