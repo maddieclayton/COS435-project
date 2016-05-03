@@ -253,19 +253,26 @@ class ParserThread(Thread):
                 self._url_frontier.add_url(url)
 
             # Save only the content of the first paragraph.
-            self._save_first_paragraph(page_content, page_url)
+            self._save(page_content, page_url, first_paragraph=False)
 
-    def _save_first_paragraph(self, page_content, page_url):
+    def _save(self, page_content, page_url, first_paragraph = True):
 
         # Add the line to the overview.
         self._overview_logger.info("%d-%d\t%s\n", self._thread_number, self._page_counter, page_url)
 
-        # Extract the first paragraph
-        result = self._first_paragraph_regex.search(page_content)
-        if result is not None:
+        if first_paragraph:
+            # Extract the first paragraph
+            result = self._first_paragraph_regex.search(page_content)
+            if result is not None:
+                with open('fetched_data/%d-%d.html' % (self._thread_number, self._page_counter), 'w') as f:
+                    f.write(result.group(0))
+                self._page_counter += 1
+        else:
+            # Save the whole page
             with open('fetched_data/%d-%d.html' % (self._thread_number, self._page_counter), 'w') as f:
-                f.write(result.group(0))
+                f.write(page_content)
             self._page_counter += 1
+
 
 
 class Fetcher(object):
