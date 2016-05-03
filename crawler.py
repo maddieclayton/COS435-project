@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import logging
+import random
 import re
 import time
 import os
@@ -9,6 +10,7 @@ import requests
 from threading import Lock, Thread
 from queue import Queue, Empty
 
+output_dir = 'fetched_data_new'
 
 class URLFrontier(object):
     """
@@ -103,7 +105,7 @@ class URLFrontier(object):
         # Check if we have too many URLs in memory. If yes, write them to a file for later retrieval.
         if self._urls.qsize() > self._url_threshold:
             self._all_urls_lock.acquire()
-            with open('fetched_data/temp_urls.txt', 'a') as f:
+            with open(output_dir + '/temp_urls.txt', 'a') as f:
                 for i in range(0, self._url_threshold - 100000):
                     try:
                         f.write(self._urls.get(False) + "\n")
@@ -120,7 +122,8 @@ class URLFrontier(object):
             if regex.search(url) is not None:
                 return False
 
-        return True
+        # Randomize the urls a little bit.
+        return random.randint(0, 2) == 1
 
     def get_url(self):
         """
@@ -144,7 +147,7 @@ class URLFrontier(object):
             # Maybe we have none left in the queue. Let's load some from disk.
             self._all_urls_lock.acquire()
 
-            path = 'fetched_data/temp_urls.txt'
+            path = output_dir + '/temp_urls.txt'
             if not os.path.isfile(path):
                 return None
 
@@ -261,7 +264,7 @@ class ParserThread(Thread):
             first_paragraph_content = result.group(0)
             # Make sure we ignore the "may refer to:" pages.
             if " may refer to:" not in first_paragraph_content.lower():
-                with open('fetched_data/%d-%d.html' % (self._thread_number, self._page_counter), 'w') as f:
+                with open(output_dir + '/%d-%d.html' % (self._thread_number, self._page_counter), 'w') as f:
                     f.write(first_paragraph_content)
                 self._page_counter += 1
 
@@ -345,7 +348,7 @@ def setup_logging():
         l = logging.getLogger(name)
         l.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s : %(message)s')
-        file_handler = logging.FileHandler(filename='fetched_data/' + filename, mode='w')
+        file_handler = logging.FileHandler(filename=output_dir + '/' + filename, mode='w')
         file_handler.setFormatter(formatter)
         l.addHandler(file_handler)
 
