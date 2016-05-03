@@ -34,7 +34,7 @@ def random_tweet():
         f.write(json.dumps(tweet))
 
     # Get our additional information
-    query = Query(tweet['text'])
+    query = Query(tweet['text'] + " " + tweet['user']['name'])
     query.run()
     article = query.get_result_article()
     article_file_name = query.get_result_filename()
