@@ -47,7 +47,7 @@ class Query(object):
 
                     # Weight of the term in the document times our term weight (TF-IDF).
                     # We then normalize by the length of the file.
-                    document_term_scores[doc] += (entry['weight'] * weight) / entry['filelength']
+                    document_term_scores[doc] += (entry['weight'] * weight) / math.log(entry['filelength'])
 
                 # Merge with overall score dict.
                 for k in document_term_scores.keys():
