@@ -2,6 +2,7 @@ import json
 import sys
 import math
 import config
+from nltk.corpus import stopwords
 
 
 class Query(object):
@@ -22,9 +23,11 @@ class Query(object):
 
         query_words = self._query_string.split()
         query_words = [word.lower() for word in query_words]
+        sw = stopwords.words('english')
+        query_words = filter(lambda x: x not in sw, query_words)
         score_dict = {}
         for word in query_words:
-            if len(word) > 1 and word in keys:
+            if len(word) > 2 and word in keys:
                 path = "output/" + word + ".json"
                 with open(path, 'r') as f:
                     dic_file_content = f.read()
