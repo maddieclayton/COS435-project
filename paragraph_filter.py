@@ -54,6 +54,7 @@ class DictionaryEntry(object):
     def __init__(self, weight, filename):
         self.weight = weight
         self.filename = filename
+        self.filelength = 0
 
     def to_dic(self):
         """
@@ -62,10 +63,11 @@ class DictionaryEntry(object):
         return {
             'filename': self.filename,
             'weight': self.weight,
+            'filelength': self.filelength,
         }
 
     def __str__(self):
-        return '<File: %s weight: %d>' % (self.filename, self.weight)
+        return '<File: %s (length: %d) weight: %d>' % (self.filename, self.filelength, self.weight)
 
 
 class HTMLParser(html.parser.HTMLParser):
@@ -81,6 +83,7 @@ class HTMLParser(html.parser.HTMLParser):
         super().__init__()
 
         self._filename = filename
+        self._word_count = 0
 
         # The current weight.
         self._current_weight = 1
@@ -113,6 +116,7 @@ class HTMLParser(html.parser.HTMLParser):
         stops = stopwords.words('english')
         for word in words:
             if word not in stops:
+                self._word_count += 1
 
                 # Check if we encountered this word before. If not, create a new entry.
                 if word not in self._terms_dict:
@@ -123,15 +127,19 @@ class HTMLParser(html.parser.HTMLParser):
                 self._terms_dict[word].append(dic_entry)
 
     def get_terms(self):
+        # Set the length of all words
+        for word, entries in self._terms_dict.items():
+            for e in entries:
+                e.filelength = self._word_count
+
+        # Let's return these dictionaries.
         return self._terms_dict
-
-
 
     def _clean_data(self, data):
         """
         Cleans the given data.
         """
-        p = re.compile('\[[0-9]*?\]|/|\.|\(|\)|,|\"|\−|\;|\[|\]|\*|\:|\~')
+        p = re.compile('\[[0-9]*?\]|\'s|/|\.|\(|\)|,|\"|\'|−|;|\[|\]|\*|:|~')
         li = p.findall(data)
         for instance in li:
             data = data.replace(instance, '')

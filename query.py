@@ -45,7 +45,9 @@ class Query(object):
                     if doc not in document_term_scores:
                         document_term_scores[doc] = 0
 
-                    document_term_scores[doc] += entry['weight'] * weight
+                    # Weight of the term in the document times our term weight (TF-IDF).
+                    # We then normalize by the length of the file.
+                    document_term_scores[doc] += (entry['weight'] * weight) / entry['filelength']
 
                 # Merge with overall score dict.
                 for k in document_term_scores.keys():
