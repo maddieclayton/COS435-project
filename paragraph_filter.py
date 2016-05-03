@@ -139,7 +139,7 @@ class HTMLParser(html.parser.HTMLParser):
         """
         Cleans the given data.
         """
-        p = re.compile('\[[0-9]*?\]|\'s|/|\.|\(|\)|,|\"|\'|−|;|\[|\]|\*|:|~|\?|!')
+        p = re.compile('\[[0-9]*?\]|\'s|/|\.|\(|\)|,|\"|\'|−|;|\[|\]|\*|:|~|\?|!|#')
         li = p.findall(data)
         for instance in li:
             data = data.replace(instance, '')
