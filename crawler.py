@@ -262,8 +262,8 @@ class ParserThread(Thread):
         result = self._first_paragraph_regex.search(page_content)
         if result is not None:
             first_paragraph_content = result.group(0)
-            # Make sure we ignore the "may refer to:" pages.
-            if " may refer to:" not in first_paragraph_content.lower():
+            # Make sure we ignore the "may/can refer to:" pages.
+            if " refer to:" not in first_paragraph_content.lower():
                 with open(output_dir + '/%d-%d.html' % (self._thread_number, self._page_counter), 'w') as f:
                     f.write(first_paragraph_content)
                 self._page_counter += 1
