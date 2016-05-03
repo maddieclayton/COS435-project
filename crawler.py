@@ -1,6 +1,7 @@
 import datetime
 import hashlib
 import logging
+import random
 import re
 import time
 import os
@@ -120,7 +121,9 @@ class URLFrontier(object):
             if regex.search(url) is not None:
                 return False
 
-        return True
+        # We add some randomization to focus better on important pages. The assumption is that pages that are important
+        # are linked more often. Therefore the chance for them to pass the "randomization test" is higher.
+        return random.randint(0, 2) == 0
 
     def get_url(self):
         """
