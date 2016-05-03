@@ -40,7 +40,7 @@ def random_tweet():
     article_file_name = query.get_result_filename()
 
     # Replace all the links in the article
-    article = article.replace('/wiki/', 'https://en.wikipedia.com/wiki/')
+    article = article.replace('/wiki/', 'https://en.wikipedia.org/wiki/')
 
     if article is not None:
         markup = TwitterAPI.get_tweet_markup(tweet_id)
