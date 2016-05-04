@@ -122,8 +122,7 @@ class URLFrontier(object):
             if regex.search(url) is not None:
                 return False
 
-        # Randomize the urls a little bit.
-        return random.randint(0, 2) == 1
+        return True
 
     def get_url(self):
         """
