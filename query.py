@@ -21,6 +21,7 @@ class Query(object):
 
         keys = json.loads(keys_file_content)
 
+        #Filter the query.
         query_words = self._query_string.split()
         query_words = [word.lower() for word in query_words]
         sw = stopwords.words('english')
@@ -47,10 +48,11 @@ class Query(object):
 
                     # Weight of the term in the document times our term weight (TF-IDF).
                     # We then normalize by the length of the file.
-                    dividend = math.log10(float(entry['filelength']))
-                    if dividend <= 0:
-                        dividend = 1
-                    document_term_scores[doc] += (entry['weight'] * weight) / dividend
+                    # dividend = math.log10(float(entry['filelength']))
+                    # if dividend <= 0:
+                        # dividend = 1
+                    # document_term_scores[doc] += (entry['weight'] * weight) / dividend
+                    document_term_scores[doc] += (entry['weight'] * weight)
 
                 # Merge with overall score dict.
                 for k in document_term_scores.keys():
