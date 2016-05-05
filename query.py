@@ -1,6 +1,9 @@
 import json
 import sys
 import math
+
+import re
+
 import config
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
@@ -23,7 +26,11 @@ class Query(object):
         keys = json.loads(keys_file_content)
 
         # Filter the query.
-        query_words = self._query_string.split()
+        p = re.compile('\[[0-9]*?\]|\'s|/|\.|\(|\)|,|\"|\'|−|;|\[|\]|\*|:|~|\?|!|#|@')
+        li = p.findall(self._query_string)
+        for instance in li:
+            query_string = self._query_string.replace(instance, '')
+        query_words = query_string.split()
         print("Query words before processing: %s" % query_words)
         query_words = [word.lower() for word in query_words]
         sw = stopwords.words('english')
@@ -33,7 +40,7 @@ class Query(object):
         stemmer = PorterStemmer()
         query_words = map(lambda x: stemmer.stem(x), query_words)
 
-        print("Query words after processing: %s" % list(query_words))
+        # print("Query words after processing: %s" % list(query_words))
 
         score_dict = {}
         for word in query_words:
