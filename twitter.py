@@ -68,7 +68,7 @@ class TwitterAPI(object):
 
     @staticmethod
     def get_tweet_markup(id):
-        url = TwitterAPI._tweets_markup_url + '?id=' + str(id)
+        url = TwitterAPI._tweets_markup_url + '?id=' + str(id) + '&hide_thread=true'
         response = requests.get(url).json()
         return response['html']
 
