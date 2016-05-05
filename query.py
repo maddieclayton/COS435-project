@@ -33,7 +33,7 @@ class Query(object):
         stemmer = PorterStemmer()
         query_words = map(lambda x: stemmer.stem(x), query_words)
 
-        print("Query words after processing: %s" % query_words)
+        print("Query words after processing: %s" % list(query_words))
 
         score_dict = {}
         for word in query_words:
