@@ -3,6 +3,7 @@ import sys
 import math
 import config
 from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer
 
 
 class Query(object):
@@ -21,11 +22,19 @@ class Query(object):
 
         keys = json.loads(keys_file_content)
 
-        #Filter the query.
+        # Filter the query.
         query_words = self._query_string.split()
+        print("Query words before processing: %s" % query_words)
         query_words = [word.lower() for word in query_words]
         sw = stopwords.words('english')
         query_words = filter(lambda x: x not in sw, query_words)
+
+        # Apply stemming
+        stemmer = PorterStemmer()
+        query_words = map(lambda x: stemmer.stem(x), query_words)
+
+        print("Query words after processing: %s" % query_words)
+
         score_dict = {}
         for word in query_words:
             if len(word) > 2 and word in keys:
@@ -61,7 +70,6 @@ class Query(object):
 
                     score_dict[k] += document_term_scores[k]
 
-        print(score_dict)
         if len(score_dict) > 0:
             result = max(score_dict, key=score_dict.get)
             self._result_filename = result
