@@ -4,7 +4,7 @@ import os
 import re
 import sys
 from nltk.corpus import stopwords
-import csv
+from nltk.stem.porter import PorterStemmer
 
 
 def create_index(data_dir):
@@ -95,6 +95,9 @@ class HTMLParser(html.parser.HTMLParser):
             'a': 1,
         }
 
+        # The stemmer used to stem every word.
+        self._stemmer = PorterStemmer()
+
         # Stores all terms with its attributes
         self._terms_dict = {}
 
@@ -116,15 +119,16 @@ class HTMLParser(html.parser.HTMLParser):
         stops = stopwords.words('english')
         for word in words:
             if word not in stops:
+                stemmed_word = self._stemmer.stem(word)
                 self._word_count += 1
 
                 # Check if we encountered this word before. If not, create a new entry.
-                if word not in self._terms_dict:
-                    self._terms_dict[word] = []
+                if stemmed_word not in self._terms_dict:
+                    self._terms_dict[stemmed_word] = []
 
                 # Add a new dic entry for this occurence.
                 dic_entry = DictionaryEntry(weight=self._current_weight, filename=self._filename)
-                self._terms_dict[word].append(dic_entry)
+                self._terms_dict[stemmed_word].append(dic_entry)
 
     def get_terms(self):
         # Set the length of all words
