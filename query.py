@@ -26,10 +26,11 @@ class Query(object):
         keys = json.loads(keys_file_content)
 
         # Filter the query.
+        query_string = self._query_string
         p = re.compile('\[[0-9]*?\]|\'s|/|\.|\(|\)|,|\"|\'|−|;|\[|\]|\*|:|~|\?|!|#|@')
-        li = p.findall(self._query_string)
+        li = p.findall(query_string)
         for instance in li:
-            query_string = self._query_string.replace(instance, '')
+            query_string = query_string.replace(instance, '')
         query_words = query_string.split()
         print("Query words before processing: %s" % query_words)
         query_words = [word.lower() for word in query_words]
