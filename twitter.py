@@ -2,6 +2,7 @@ import requests
 import base64
 import random
 
+
 class TwitterAPI(object):
     """
     Load data from the twitter API

@@ -76,7 +76,6 @@
   <script>
     function rateTweet(rating) {
       tweet_id = {{ tweet_id }};
-      // @TODO Fix article placeholder
       $.ajax('/rate-tweet/'+ tweet_id + '?rating=' + rating + '&articles={{ article_filename|urlencode }}')
 
       // Hide all rating buttons!

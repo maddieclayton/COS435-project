@@ -8,4 +8,4 @@ p = re.compile(b'href="/wiki/.*?"')
 li = p.findall(page)
 
 for s in li:
-	print ('https://en.wikipedia.org/' + s[7:-1].decode("utf-8"))
+    print('https://en.wikipedia.org/' + s[7:-1].decode("utf-8"))

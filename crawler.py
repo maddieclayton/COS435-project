@@ -1,7 +1,6 @@
 import datetime
 import hashlib
 import logging
-import random
 import re
 import time
 import os
@@ -142,7 +141,6 @@ class URLFrontier(object):
 
             return 'https://en.wikipedia.org/' + url
         except Empty as e:
-            # XXX: Need to add lock around temp_urls file. Might result in crasho otherwise if multiple try to read from it!
             # Maybe we have none left in the queue. Let's load some from disk.
             self._all_urls_lock.acquire()
 
@@ -213,7 +211,6 @@ class Parser(object):
 
         # Add to the queue and return immediately
         self._content_queue.put((page_url, page_content))
-
 
 
 class ParserThread(Thread):

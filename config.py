@@ -8,6 +8,6 @@ class Config(object):
     source_data_folder = 'fetched_data/'
 
     # The size of the whole collection.
-    collection_size = 1300000
+    collection_size = 2100000
 
 
